@@ -1,0 +1,28 @@
+# Docker files
+mysql-volumes/
+
+#  Variables de entorno
+TrackerSuite.Api/.env
+**/.env
+
+# Archivos de compilación
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+**/obj/
+
+# Archivos de usuario/IDE
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Otros
+TestResults/
+*.log
+  project.lock.json
+
+
