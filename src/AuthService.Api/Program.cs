@@ -1,16 +1,38 @@
+using DotNetEnv;
 using System.Text;
-using AuthService.Api.IJwtService;
+using Microsoft.OpenApi.Models;
 using AuthService.AuthDbContext;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using AuthService.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// CONFIGURATION (ENV)
+var envPath = Path.GetFullPath(
+    Path.Combine(builder.Environment.ContentRootPath, "..", "..", ".env")
+);
+Env.Load(envPath);
 
-// JWT agregar autenticacion
+Console.WriteLine($"Loading .env from: {envPath}");
+Console.WriteLine($"DB_HOST: {Environment.GetEnvironmentVariable("DB_HOST")}");
+Console.WriteLine($"DB_PORT: {Environment.GetEnvironmentVariable("DB_PORT")}");
+Console.WriteLine($"DB_NAME: {Environment.GetEnvironmentVariable("DB_NAME")}");
+Console.WriteLine($"DB_USER: {Environment.GetEnvironmentVariable("DB_USER")}");
+Console.WriteLine($"DB_USER: {Environment.GetEnvironmentVariable("ISSUER")}");
+Console.WriteLine($"DB_USER: {Environment.GetEnvironmentVariable("AUDIENCE")}");
+
+// INSTANCE OF JWTSETTINGS
+var jwtSettings = new JwtSettings
+{
+    Issuer = Environment.GetEnvironmentVariable("ISSUER")!,
+    Audience = Environment.GetEnvironmentVariable("AUDIENCE")!,
+    Key = Environment.GetEnvironmentVariable("KEY")!,
+    Expiration = int.Parse(Environment.GetEnvironmentVariable("EXPIRATIONMINUTES")!)
+};
+
+// JWT AUTHENTICATION
 builder.Services.AddAuthentication(
     JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
@@ -24,23 +46,35 @@ builder.Services.AddAuthentication(
             ValidateIssuerSigningKey = true,
 
             ValidIssuer =
-                builder.Configuration["Jwt:Issuer"],
+               jwtSettings.Issuer,
 
             ValidAudience =
-                builder.Configuration["Jwt:Audience"],
+                jwtSettings.Audience,
 
             IssuerSigningKey =
                 new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(
-                        builder.Configuration["Jwt:Key"]!)),
+                        jwtSettings.Key)),
 
         };
 });
 
+// DATABASE 
+var connectionString =     
+    $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
+    $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+    $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
+    $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
+    $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};";
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString)
+);
 
+// SERVICES - CONTROLLERS
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
+// SWAGGER
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer",
@@ -71,15 +105,16 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
+// CUSTOM SERVICES (DI)
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSingleton(jwtSettings);
 
+
+// PIPELINE MIDDLEWARE
 var app = builder.Build();
-
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();

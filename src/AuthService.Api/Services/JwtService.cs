@@ -3,16 +3,18 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
-using AuthService.Api.IJwtService;
 using AuthService.Api.Model;
+using AuthService.Api.Services;
 
 public class JwtService : IJwtService
 {
     private readonly IConfiguration _configuration;
+    private readonly JwtSettings _jwtSettings;
 
-    public JwtService(IConfiguration configuration)
+    public JwtService(IConfiguration configuration, JwtSettings jwtSettings)
     {
         _configuration = configuration;
+        _jwtSettings = jwtSettings;
     }
 
     public string GenerateToken(User user)
@@ -29,7 +31,7 @@ public class JwtService : IJwtService
         // Crear clave secreta
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(
-                _configuration["Jwt:Key"]!));
+                _jwtSettings.Key));
 
         // Crear firma
         var credentials =
@@ -43,10 +45,10 @@ public class JwtService : IJwtService
         // Firma el token con HMAC SHA256.
 
         var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
+            issuer: _jwtSettings.Issuer,
+            audience: _jwtSettings.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
+            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.Expiration),
             signingCredentials: credentials);
 
         // Convierte el objeto JWT a texto.

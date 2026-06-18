@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using AuthService.Api.Dto;
 using AuthService.Api.Model;
 using AuthService.AuthDbContext;
-using AuthService.Api.IJwtService;
+using AuthService.Api.Services;
 
 [ApiController]
 [Route("api/v1")]
@@ -38,7 +38,10 @@ public class AuthServiceController : ControllerBase
 
         if (exists)
         {
-            return BadRequest("El usuario ya existe");
+            return BadRequest(new
+            {
+               Message = "El usuario ya existe"
+            });
         }
 
         _context.Users.Add(user);
@@ -64,7 +67,10 @@ public class AuthServiceController : ControllerBase
 
         if (user is null)
         {
-            return Unauthorized();
+            return Unauthorized(new
+            {
+                Message = "User does not exist"
+            });
         }
 
         var isValid = BCrypt.Net.BCrypt.Verify(
@@ -73,7 +79,10 @@ public class AuthServiceController : ControllerBase
 
         if (!isValid)
         {
-            return Unauthorized();
+            return Unauthorized(new
+            {
+                Message = "Invalid username or password"
+            });
         }
 
         var accessToken = _jwtService.GenerateToken(user);
@@ -108,17 +117,26 @@ public class AuthServiceController : ControllerBase
                 x.Token == request.RefreshToken);
 
         if (refreshToken == null)
-            return Unauthorized("Refresh token inválido");
+            return Unauthorized(new
+            {
+                Message = "Invalid refresh token"
+            });
 
         if (refreshToken.ExpiresAt < DateTime.UtcNow)
-            return Unauthorized("Refresh token expirado");
+            return Unauthorized(new
+            {
+                Message = "Refresh token has expired"
+            });
 
         var user = await _context.Users
             .FirstOrDefaultAsync(x =>
                 x.Id == refreshToken.UserId);
 
         if (user == null)
-            return Unauthorized();
+            return Unauthorized(new
+            {
+                Message = "Invalid user or refresh token"
+            });
 
         // Rotation start = Cada vez que usas un Refresh Token, se invalida el anterior y se genera uno nuevo.
         // Porque si alguien roba el refresh token anterior podrá usarlo durante los próximos 30 días.
@@ -183,7 +201,6 @@ public class AuthServiceController : ControllerBase
             Role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
         });
     }
-
 
     [Authorize(Roles = "Admin")]
     [HttpGet("test-admin")]

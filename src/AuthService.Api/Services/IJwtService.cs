@@ -1,6 +1,6 @@
 using AuthService.Api.Model;
 
-namespace AuthService.Api.IJwtService;
+namespace AuthService.Api.Services;
 
 public interface IJwtService
 {
