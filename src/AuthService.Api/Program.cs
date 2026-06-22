@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AuthService.Api.Services;
+using AuthService.Api.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 

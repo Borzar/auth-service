@@ -1,4 +1,4 @@
-namespace AuthService.Api.Services;
+namespace AuthService.Api.Model;
 public class JwtSettings
 {
     public string Issuer { get; set; } = string.Empty;
