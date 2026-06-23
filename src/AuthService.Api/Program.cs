@@ -21,8 +21,8 @@ Console.WriteLine($"DB_HOST: {Environment.GetEnvironmentVariable("DB_HOST")}");
 Console.WriteLine($"DB_PORT: {Environment.GetEnvironmentVariable("DB_PORT")}");
 Console.WriteLine($"DB_NAME: {Environment.GetEnvironmentVariable("DB_NAME")}");
 Console.WriteLine($"DB_USER: {Environment.GetEnvironmentVariable("DB_USER")}");
-Console.WriteLine($"DB_USER: {Environment.GetEnvironmentVariable("ISSUER")}");
-Console.WriteLine($"DB_USER: {Environment.GetEnvironmentVariable("AUDIENCE")}");
+Console.WriteLine($"JWT_ISSUER: {Environment.GetEnvironmentVariable("ISSUER")}");
+Console.WriteLine($"JWT_AUDIENCE: {Environment.GetEnvironmentVariable("AUDIENCE")}");
 
 // INSTANCE OF JWTSETTINGS
 var jwtSettings = new JwtSettings

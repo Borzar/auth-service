@@ -1,0 +1,30 @@
+# Carpetas de build
+bin/
+obj/
+
+# Archivos de Visual Studio / VS Code
+.vs/
+.vscode/
+
+# User files
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Publish output local (si existe)
+publish/
+out/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
