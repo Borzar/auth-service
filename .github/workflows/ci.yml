@@ -1,15 +1,12 @@
-name: Conectividad e Integración Continua (CI)
+# Continuous Integration and Continuous Delivery CI/CD
+name: Conectividad e Integración Continua (CI/CD)
 
-# Esta pipeline se ejecuta en la rama main
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-  build-and-test:
-    # Usamos un servidor virtual con Linux Ubuntu garantizado por GitHub
+  build-test-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,14 +14,25 @@ jobs:
     - name: Descargar código fuente
       uses: actions/checkout@v4
 
-    # 2. Configurar el motor de Docker en el servidor virtual
+    # 1. Configurar herramientas de Docker en el servidor de GitHub
     - name: Configurar Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    # 3. Construir la imagen de Docker
-    # ¡Aquí ocurre la magia! Al ejecutar docker build, se disparará tu 'test-stage'.
-    # Si un test falla, el comando 'docker build' devolverá un código de error
-    # y GitHub Actions detendrá el pipeline inmediatamente, marcándolo con una "X" roja.
-    - name: Construir imagen de Docker y Ejecutar Tests
-      run: |
-        docker build -t auth-service:${{ github.sha }} .
+    # 2. Iniciar sesión en Docker Hub usando los Secretos seguros
+    - name: Iniciar sesión en Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # 3. Construir la imagen Y subirla automáticamente a Docker Hub (Push)
+    # Usamos dos etiquetas (tags): 'latest' para la última versión y el SHA de git para tener historial.
+    - name: Construir y Subir Imagen de Docker
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          jadomiz/auth-service:latest
+          jadomiz/auth-service:${{ github.sha }}
