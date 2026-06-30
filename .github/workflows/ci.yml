@@ -35,4 +35,4 @@ jobs:
         push: true
         tags: |
           jadomiz/auth-service:latest
-          jadomiz/auth-service:${{ github.sha }}
+          jadomiz/auth-service:1.0.0
